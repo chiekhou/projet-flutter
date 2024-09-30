@@ -1,0 +1,2278 @@
+basePath: /
+definitions:
+  models.Gagnant:
+    properties:
+      id:
+        type: integer
+      lot:
+        $ref: '#/definitions/models.Lot'
+      lotID:
+        type: integer
+      ticket:
+        $ref: '#/definitions/models.Ticket'
+      ticketID:
+        type: integer
+      tombola:
+        $ref: '#/definitions/models.Tombola'
+      tombolaID:
+        type: integer
+      user:
+        $ref: '#/definitions/models.User'
+      userID:
+        type: integer
+    type: object
+  models.JetonTransaction:
+    type: object
+  models.Kermesse:
+    type: object
+  models.Lot:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      nom:
+        type: string
+      tombola:
+        $ref: '#/definitions/models.Tombola'
+      tombolaID:
+        type: integer
+      valeur:
+        type: number
+    type: object
+  models.Message:
+    properties:
+      contenu:
+        type: string
+      destinataire:
+        $ref: '#/definitions/models.User'
+      destinataireID:
+        type: integer
+      expediteur:
+        $ref: '#/definitions/models.User'
+      expediteurID:
+        type: integer
+      id:
+        type: integer
+      lu:
+        type: boolean
+    type: object
+  models.Role:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    type: integer
+    x-enum-varnames:
+    - RoleEleve
+    - RoleParent
+    - RoleTeneurStand
+    - RoleOrganisateur
+    - RoleAdmin
+  models.Stand:
+    type: object
+  models.StandType:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-varnames:
+    - StandNourriture
+    - StandBoisson
+    - StandActivite
+  models.Stock:
+    properties:
+      id:
+        type: integer
+      nomProduit:
+        type: string
+      prixEnJetons:
+        type: integer
+      quantite:
+        type: integer
+      stand:
+        $ref: '#/definitions/models.Stand'
+      standID:
+        type: integer
+    type: object
+  models.Ticket:
+    properties:
+      estGagnant:
+        type: boolean
+      id:
+        type: integer
+      numero:
+        type: string
+      prixEnJetons:
+        type: integer
+      tombola:
+        $ref: '#/definitions/models.Tombola'
+      tombolaID:
+        type: integer
+      user:
+        $ref: '#/definitions/models.User'
+      userID:
+        type: integer
+    type: object
+  models.Tombola:
+    properties:
+      id:
+        type: integer
+      kermesseID:
+        type: integer
+      lots:
+        items:
+          $ref: '#/definitions/models.Lot'
+        type: array
+      nom:
+        type: string
+      tickets:
+        items:
+          $ref: '#/definitions/models.Ticket'
+        type: array
+    type: object
+  models.TransactionType:
+    enum:
+    - ACHAT
+    - UTILISATION
+    - TRANSFERT
+    type: string
+    x-enum-varnames:
+    - TransactionTypeAchat
+    - TransactionTypeUtilisation
+    - TransactionTypeTransfert
+  models.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      password:
+        type: string
+      role:
+        $ref: '#/definitions/models.Role'
+      solde_jeton:
+        type: integer
+    type: object
+  requests.AddChildRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      role:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    - role
+    type: object
+  requests.AttributeJetonsRequest:
+    properties:
+      amount:
+        example: 20
+        type: integer
+      child_id:
+        example: 2
+        type: integer
+      parent_id:
+        example: 1
+        type: integer
+    type: object
+  requests.BuyJetonsRequest:
+    properties:
+      amount:
+        example: 50
+        type: number
+      user_id:
+        example: 1
+        type: integer
+    type: object
+  requests.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  requests.PaymentRequest:
+    properties:
+      quantity:
+        type: integer
+      stand_id:
+        type: integer
+      user_id:
+        type: integer
+    required:
+    - quantity
+    - stand_id
+    - user_id
+    type: object
+  requests.RegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      role:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    - role
+    type: object
+  response.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  response.KermesseResponse:
+    properties:
+      date:
+        type: string
+      id:
+        type: integer
+      lieu:
+        type: string
+      nom:
+        type: string
+    type: object
+  response.LotResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      nom:
+        type: string
+      type:
+        type: string
+      valeur:
+        type: number
+    type: object
+  response.PlanResponse:
+    properties:
+      id:
+        type: integer
+      plan_interactif:
+        additionalProperties: true
+        type: object
+    type: object
+  response.StandResponse:
+    properties:
+      id:
+        type: integer
+      jetons_collectes:
+        type: integer
+      kermesse_id:
+        type: integer
+      nom:
+        type: string
+      points_attribues:
+        type: integer
+      position_x:
+        type: integer
+      position_y:
+        type: integer
+      teneur_id:
+        type: integer
+      type:
+        type: string
+    type: object
+  response.SuccessResponse:
+    properties:
+      data:
+        type: boolean
+    type: object
+  response.TokenResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  response.UserResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      roles:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: An example template of a Golang backend API
+  license:
+    name: MIT
+  title: The Better Backend Template
+  version: "0.1"
+paths:
+  /api/conversations/{userId1}/{userId2}:
+    get:
+      description: Get all messages exchanged between two specific users
+      parameters:
+      - description: First User ID
+        in: path
+        name: userId1
+        required: true
+        type: integer
+      - description: Second User ID
+        in: path
+        name: userId2
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Message'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get conversation between two users
+      tags:
+      - Chat
+  /api/jeton-transaction/buy:
+    post:
+      consumes:
+      - application/json
+      description: Permet à un utilisateur d'acheter des jetons en utilisant de l'argent
+        réel
+      parameters:
+      - description: Détails de l'achat de jetons
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.BuyJetonsRequest'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Acheter des jetons avec de l'argent réel
+      tags:
+      - JetonTransaction
+  /api/jeton-transaction/transfer:
+    post:
+      consumes:
+      - application/json
+      description: Permet à un parent de transférer des jetons à son enfant
+      parameters:
+      - description: Détails du transfert de jetons
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.AttributeJetonsRequest'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Attribuer des jetons à un enfant
+      tags:
+      - JetonTransaction
+  /api/jeton-transactions:
+    post:
+      consumes:
+      - application/json
+      description: Create a new jeton transaction
+      parameters:
+      - description: Jeton transaction object
+        in: body
+        name: transaction
+        required: true
+        schema:
+          $ref: '#/definitions/models.JetonTransaction'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.JetonTransaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Create a new jeton transaction
+      tags:
+      - JetonTransaction
+  /api/jeton-transactions/pay-with-jetons:
+    post:
+      consumes:
+      - application/json
+      description: Allow users to pay with jetons for food, drinks, or activities
+        at a specific stand
+      parameters:
+      - description: Payment details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.PaymentRequest'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Pay for items or activities at a stand with jetons
+      tags:
+      - JetonTransaction
+  /api/jeton-transactions/summary:
+    get:
+      description: Get a summary of all jeton transactions
+      parameters:
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.JetonTransaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get transaction summary
+      tags:
+      - JetonTransaction
+  /api/kermesses:
+    get:
+      description: Retrieve a list of all kermesses
+      parameters:
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.KermesseResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get all kermesses
+      tags:
+      - Kermesse
+    post:
+      consumes:
+      - application/json
+      description: Create a new kermesse with the provided information
+      parameters:
+      - description: Kermesse data
+        in: body
+        name: kermesse
+        required: true
+        schema:
+          $ref: '#/definitions/models.Kermesse'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.KermesseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Create a new kermesse
+      tags:
+      - Kermesse
+  /api/kermesses/{id}:
+    delete:
+      description: Delete a specific kermesse
+      parameters:
+      - description: Kermesse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Delete a kermesse
+      tags:
+      - Kermesse
+    get:
+      description: Retrieve details of a specific kermesse
+      parameters:
+      - description: Kermesse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.KermesseResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get a specific kermesse
+      tags:
+      - Kermesse
+    put:
+      consumes:
+      - application/json
+      description: Update details of a specific kermesse
+      parameters:
+      - description: Kermesse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated kermesse data
+        in: body
+        name: kermesse
+        required: true
+        schema:
+          $ref: '#/definitions/models.Kermesse'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.KermesseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Update a kermesse
+      tags:
+      - Kermesse
+  /api/kermesses/{id}/plan:
+    get:
+      description: Retrieve the interactive plan of a specific kermesse
+      parameters:
+      - description: Kermesse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.PlanResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get the interactive plan of a kermesse
+      tags:
+      - Kermesse
+  /api/kermesses/{id}/stands:
+    get:
+      description: Retrieve a list of all stands for a specific kermesse
+      parameters:
+      - description: Kermesse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.StandResponse'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get all stands of a kermesse
+      tags:
+      - Kermesse
+  /api/kermesses/{id}/tombolas:
+    post:
+      consumes:
+      - application/json
+      description: Create a new tombola for a kermesse
+      parameters:
+      - description: Kermesse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Tombola data
+        in: body
+        name: tombola
+        required: true
+        schema:
+          $ref: '#/definitions/models.Tombola'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Tombola'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Create a new tombola
+      tags:
+      - Tombola
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      description: Login to the app
+      parameters:
+      - description: User credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/requests.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Allow you to log in and get a JWT Token
+      tags:
+      - Auth
+  /api/logout:
+    post:
+      consumes:
+      - application/json
+      description: Inform the client to delete the token
+      parameters:
+      - default: Bearer <Add access token here>
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Logout
+      tags:
+      - Auth
+  /api/messages:
+    post:
+      consumes:
+      - application/json
+      description: Send a new message to another user
+      parameters:
+      - description: Message object
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/models.Message'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Send a new message
+      tags:
+      - Chat
+  /api/messages/{id}/read:
+    put:
+      description: Mark a specific message as read
+      parameters:
+      - description: Message ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Mark a message as read
+      tags:
+      - Chat
+  /api/parents/me/children:
+    post:
+      consumes:
+      - application/json
+      description: Permet à un parent d'ajouter un enfant à son profil
+      parameters:
+      - description: Informations de l'enfant
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.AddChildRequest'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Ajouter un enfant au profil du parent
+      tags:
+      - Parents
+  /api/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user with the provided information
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/requests.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Allow you to register as a new User
+      tags:
+      - Auth
+  /api/stands:
+    post:
+      consumes:
+      - application/json
+      description: Create a new stand for a kermesse
+      parameters:
+      - description: Stand object
+        in: body
+        name: stand
+        required: true
+        schema:
+          $ref: '#/definitions/models.Stand'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Stand'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Create a new stand
+      tags:
+      - Stand
+  /api/stands/{id}:
+    delete:
+      description: Delete a specific stand
+      parameters:
+      - description: Stand ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Delete a stand
+      tags:
+      - Stand
+    get:
+      description: Get details of a specific stand
+      parameters:
+      - description: Stand ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Stand'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get a stand
+      tags:
+      - Stand
+    put:
+      consumes:
+      - application/json
+      description: Update details of a specific stand
+      parameters:
+      - description: Stand ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated stand object
+        in: body
+        name: stand
+        required: true
+        schema:
+          $ref: '#/definitions/models.Stand'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Stand'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Update a stand
+      tags:
+      - Stand
+  /api/stands/{id}/jeton-transactions:
+    get:
+      description: Get all jeton transactions for a specific stand
+      parameters:
+      - description: Stand ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.JetonTransaction'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get stand's jeton transactions
+      tags:
+      - JetonTransaction
+  /api/stands/{id}/jetons:
+    post:
+      consumes:
+      - application/json
+      description: Collect jetons for a specific stand
+      parameters:
+      - description: Stand ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Jeton collection object
+        in: body
+        name: jetons
+        required: true
+        schema:
+          $ref: '#/definitions/models.Stand'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Stand'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Collect jetons for a stand
+      tags:
+      - Stand
+  /api/stands/{id}/points:
+    post:
+      consumes:
+      - application/json
+      description: Attribute points for a specific stand (only for activity stands)
+      parameters:
+      - description: Stand ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Points attribution object
+        in: body
+        name: points
+        required: true
+        schema:
+          $ref: '#/definitions/models.Stand'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Stand'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Attribute points for a stand
+      tags:
+      - Stand
+  /api/stands/{id}/stock:
+    post:
+      consumes:
+      - application/json
+      description: Add or update stock for a specific stand
+      parameters:
+      - description: Stand ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Stock object
+        in: body
+        name: stock
+        required: true
+        schema:
+          $ref: '#/definitions/models.Stock'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Stock'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Manage stock for a stand
+      tags:
+      - Stand
+  /api/stands/{id}/stocks:
+    get:
+      description: Retrieve all stock entries for a specific stand
+      parameters:
+      - description: Stand ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Stock'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get all stock entries for a stand
+      tags:
+      - Stock
+    post:
+      consumes:
+      - application/json
+      description: Create a new stock entry for a stand
+      parameters:
+      - description: Stand ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Stock data
+        in: body
+        name: stock
+        required: true
+        schema:
+          $ref: '#/definitions/models.Stock'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Stock'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Create a new stock entry
+      tags:
+      - Stock
+  /api/stocks/{id}:
+    delete:
+      description: Delete an existing stock entry
+      parameters:
+      - description: Stock ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Delete a stock entry
+      tags:
+      - Stock
+    put:
+      consumes:
+      - application/json
+      description: Update an existing stock entry
+      parameters:
+      - description: Stock ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated stock data
+        in: body
+        name: stock
+        required: true
+        schema:
+          $ref: '#/definitions/models.Stock'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Stock'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Update a stock entry
+      tags:
+      - Stock
+  /api/stocks/{id}/adjust:
+    post:
+      consumes:
+      - application/json
+      description: Adjust the quantity of a stock entry (add or subtract)
+      parameters:
+      - description: Stock ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Stock adjustment data
+        in: body
+        name: adjustment
+        required: true
+        schema:
+          $ref: '#/definitions/models.Stock'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Stock'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Adjust stock quantity
+      tags:
+      - Stock
+  /api/tombolas/{id}:
+    get:
+      description: Get details of a specific tombola
+      parameters:
+      - description: Tombola ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Tombola'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get tombola details
+      tags:
+      - Tombola
+  /api/tombolas/{id}/draw:
+    post:
+      description: Perform the draw for a tombola and assign winners
+      parameters:
+      - description: Tombola ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Tombola'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Perform tombola draw
+      tags:
+      - Tombola
+  /api/tombolas/{id}/gagnants:
+    get:
+      description: Retrieve a list of all gagnantd
+      parameters:
+      - description: Tombola ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Gagnant'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get all gagnants
+      tags:
+      - Gagnant
+  /api/tombolas/{id}/gagnants/{id}:
+    get:
+      description: Retrieve details of a specific gagnant of tombola
+      parameters:
+      - description: Tombola ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Gagnant ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Gagnant'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get a specific gagnant
+      tags:
+      - Gagnant
+  /api/tombolas/{id}/lots:
+    get:
+      description: Retrieve a list of all lots
+      parameters:
+      - description: Tombola ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.LotResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get all lots
+      tags:
+      - Lot
+    post:
+      consumes:
+      - application/json
+      description: Create a new lot for a kermesse
+      parameters:
+      - description: Tombola ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Tombola data
+        in: body
+        name: tombola
+        required: true
+        schema:
+          $ref: '#/definitions/models.Lot'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Lot'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Create a new lot
+      tags:
+      - Lot
+  /api/tombolas/{id}/tickets:
+    post:
+      consumes:
+      - application/json
+      description: Buy a ticket for a specific tombola
+      parameters:
+      - description: Tombola ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Ticket purchase data
+        in: body
+        name: ticket
+        required: true
+        schema:
+          $ref: '#/definitions/models.Ticket'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Ticket'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Buy a ticket for tombola
+      tags:
+      - Ticket
+  /api/tombolas/lots/{id}:
+    delete:
+      description: Delete a specific lot
+      parameters:
+      - description: Lot ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Delete a lot
+      tags:
+      - Lot
+    put:
+      consumes:
+      - application/json
+      description: Update details of a specific lot
+      parameters:
+      - description: Lot ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated lot data
+        in: body
+        name: kermesse
+        required: true
+        schema:
+          $ref: '#/definitions/models.Lot'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.LotResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Update a lot
+      tags:
+      - Lot
+  /api/users:
+    get:
+      description: Retrieve a list of all users
+      parameters:
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.UserResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get all users
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user with the provided information
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Create a new user
+      tags:
+      - Users
+  /api/users/{id}:
+    delete:
+      description: Delete a user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Delete a user
+      tags:
+      - Users
+  /api/users/{id}/jeton-transactions:
+    get:
+      description: Get all jeton transactions for a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.JetonTransaction'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get user's jeton transactions
+      tags:
+      - JetonTransaction
+  /api/users/{id}/messages:
+    get:
+      description: Get all messages for a specific user (sent and received)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get user's messages
+      tags:
+      - Chat
+  /api/users/{id}/messages/unread:
+    get:
+      description: Get all unread messages for a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Message'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get unread messages for a user
+      tags:
+      - Chat
+  /api/users/me:
+    get:
+      description: Retrieve information about the currently authenticated user
+      parameters:
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.UserResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get current user info
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update information for the currently authenticated user
+      parameters:
+      - description: Updated user data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Update current user info
+      tags:
+      - Users
+  /api/webhook/stripe:
+    post:
+      consumes:
+      - application/json
+      description: Process incoming Stripe webhook events for payment status updates
+      parameters:
+      - description: Stripe signature for webhook verification
+        in: header
+        name: Stripe-Signature
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Handle Stripe webhook events
+      tags:
+      - Payment
+  /api/ws/{user_id}:
+    get:
+      consumes:
+      - application/json
+      description: Établit une connexion WebSocket pour la messagerie en temps réel
+      parameters:
+      - description: ID de l'utilisateur
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Établir une connexion WebSocket
+      tags:
+      - Chat
+swagger: "2.0"
