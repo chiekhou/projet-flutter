@@ -48,6 +48,7 @@ type CreateJetonsTransactionRequest struct {
 type BuyJetonsRequest struct {
 	UserID uint    `json:"user_id" example:"1"`
 	Amount float64 `json:"amount" example:"50.00"`
+	TokenAmount int `json:"token_amount" example:"50"`
 }
 
 type AttributeJetonsRequest struct {

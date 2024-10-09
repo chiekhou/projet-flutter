@@ -6,19 +6,19 @@ definitions:
         type: integer
       lot:
         $ref: '#/definitions/models.Lot'
-      lotID:
+      lotId:
         type: integer
       ticket:
         $ref: '#/definitions/models.Ticket'
-      ticketID:
+      ticketId:
         type: integer
       tombola:
         $ref: '#/definitions/models.Tombola'
-      tombolaID:
+      tombolaId:
         type: integer
       user:
         $ref: '#/definitions/models.User'
-      userID:
+      userId:
         type: integer
     type: object
   models.JetonTransaction:
@@ -44,18 +44,20 @@ definitions:
     properties:
       contenu:
         type: string
-      destinataire:
-        $ref: '#/definitions/models.User'
-      destinataireID:
+      date:
+        type: string
+      destinataire_id:
         type: integer
-      expediteur:
-        $ref: '#/definitions/models.User'
-      expediteurID:
+      expediteur_id:
         type: integer
       id:
         type: integer
       lu:
         type: boolean
+    required:
+    - contenu
+    - destinataire_id
+    - expediteur_id
     type: object
   models.Role:
     enum:
@@ -121,7 +123,7 @@ definitions:
     properties:
       id:
         type: integer
-      kermesseID:
+      kermesse_id:
         type: integer
       lots:
         items:
@@ -156,7 +158,7 @@ definitions:
         type: string
       role:
         $ref: '#/definitions/models.Role'
-      solde_jeton:
+      solde_jetons:
         type: integer
     type: object
   requests.AddChildRequest:
@@ -193,6 +195,9 @@ definitions:
       amount:
         example: 50
         type: number
+      token_amount:
+        example: 50
+        type: integer
       user_id:
         example: 1
         type: integer
@@ -238,6 +243,21 @@ definitions:
     - password
     - role
     type: object
+  response.AllTicketsResponse:
+    properties:
+      est_gagnant:
+        type: boolean
+      id:
+        type: integer
+      numero:
+        type: string
+      prix_en_jetons:
+        type: integer
+      tombola_id:
+        type: integer
+      user_id:
+        type: integer
+    type: object
   response.ErrorResponse:
     properties:
       error:
@@ -262,8 +282,8 @@ definitions:
         type: integer
       nom:
         type: string
-      type:
-        type: string
+      tombola_id:
+        type: integer
       valeur:
         type: number
     type: object
@@ -274,6 +294,19 @@ definitions:
       plan_interactif:
         additionalProperties: true
         type: object
+    type: object
+  response.PointsAttributionResponse:
+    properties:
+      message:
+        type: string
+      standPoints:
+        type: integer
+      userName:
+        type: string
+      userPoints:
+        type: integer
+      userType:
+        type: string
     type: object
   response.StandResponse:
     properties:
@@ -306,6 +339,28 @@ definitions:
       token:
         type: string
     type: object
+  response.TombolaResponse:
+    properties:
+      id:
+        type: integer
+      kermesse_id:
+        type: integer
+      nom:
+        type: string
+    type: object
+  response.UserInfo:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      points_accumules:
+        type: integer
+      type:
+        type: string
+      userId:
+        type: integer
+    type: object
   response.UserResponse:
     properties:
       email:
@@ -316,6 +371,19 @@ definitions:
         type: string
       roles:
         type: string
+      solde_jetons:
+        type: integer
+    type: object
+  response.UsersListResponse:
+    properties:
+      parents:
+        items:
+          $ref: '#/definitions/response.UserInfo'
+        type: array
+      students:
+        items:
+          $ref: '#/definitions/response.UserInfo'
+        type: array
     type: object
 info:
   contact: {}
@@ -325,6 +393,76 @@ info:
   title: The Better Backend Template
   version: "0.1"
 paths:
+  /api/children/{id}:
+    get:
+      description: Retrieve details of a children
+      parameters:
+      - description: Children ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get a specific children
+      tags:
+      - Parents
+  /api/children/{id}/interactions:
+    get:
+      description: Get a children by parents
+      parameters:
+      - description: Enfant ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get a child by a parent
+      tags:
+      - Parents
   /api/conversations/{userId1}/{userId2}:
     get:
       description: Get all messages exchanged between two specific users
@@ -808,6 +946,42 @@ paths:
       tags:
       - Kermesse
   /api/kermesses/{id}/tombolas:
+    get:
+      description: Retrieve a list of all tombolas for a specific kermesse
+      parameters:
+      - description: Kermesse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.TombolaResponse'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get all tombolas of a kermesse
+      tags:
+      - Tombola
     post:
       consumes:
       - application/json
@@ -993,6 +1167,84 @@ paths:
       summary: Mark a message as read
       tags:
       - Chat
+  /api/parents/{id}/children:
+    get:
+      description: Get a children by parents
+      parameters:
+      - description: Parent ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get a child by a parent
+      tags:
+      - Parents
+  /api/parents/{id}/children/interactions:
+    get:
+      description: Get a children by parents
+      parameters:
+      - description: Parent ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get a child by a parent
+      tags:
+      - Parents
   /api/parents/me/children:
     post:
       consumes:
@@ -1035,6 +1287,32 @@ paths:
       summary: Ajouter un enfant au profil du parent
       tags:
       - Parents
+  /api/parents/user/me:
+    get:
+      description: Retrieve information about the currently authenticated user
+      parameters:
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get id parent info
+      tags:
+      - Parents
   /api/register:
     post:
       consumes:
@@ -1070,6 +1348,33 @@ paths:
       tags:
       - Auth
   /api/stands:
+    get:
+      description: Retrieve a list of all stands
+      parameters:
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.SuccessResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get all stands
+      tags:
+      - Stand
     post:
       consumes:
       - application/json
@@ -1294,49 +1599,6 @@ paths:
       summary: Collect jetons for a stand
       tags:
       - Stand
-  /api/stands/{id}/points:
-    post:
-      consumes:
-      - application/json
-      description: Attribute points for a specific stand (only for activity stands)
-      parameters:
-      - description: Stand ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Points attribution object
-        in: body
-        name: points
-        required: true
-        schema:
-          $ref: '#/definitions/models.Stand'
-      - default: Bearer
-        description: Insert your access token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Stand'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-      security:
-      - Bearer: []
-      summary: Attribute points for a stand
-      tags:
-      - Stand
   /api/stands/{id}/stock:
     post:
       consumes:
@@ -1457,6 +1719,77 @@ paths:
       security:
       - Bearer: []
       summary: Create a new stock entry
+      tags:
+      - Stock
+  /api/stands/points:
+    post:
+      consumes:
+      - application/json
+      description: Attribute points for a specific stand (only for activity stands)
+        to a parent or student
+      parameters:
+      - description: Points attribution object
+        in: body
+        name: points
+        required: true
+        schema:
+          $ref: '#/definitions/models.Stand'
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.PointsAttributionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Attribute points for a stand and a user
+      tags:
+      - Stand
+  /api/stocks:
+    get:
+      description: Retrieve a list of all stocks
+      parameters:
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.SuccessResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get all stocks
       tags:
       - Stock
   /api/stocks/{id}:
@@ -1591,6 +1924,34 @@ paths:
       summary: Adjust stock quantity
       tags:
       - Stock
+  /api/tombolas:
+    get:
+      description: Retrieve a list of all tombola
+      parameters:
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.SuccessResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get all tombola
+      tags:
+      - Tombola
   /api/tombolas/{id}:
     get:
       description: Get details of a specific tombola
@@ -1848,6 +2209,42 @@ paths:
       summary: Buy a ticket for tombola
       tags:
       - Ticket
+  /api/tombolas/{id}/user/{userId}/tickets:
+    get:
+      description: Retrieve details of a specific ticket of tombola
+      parameters:
+      - description: Tombola ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Ticket'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get a specific ticket for user
+      tags:
+      - Ticket
   /api/tombolas/lots/{id}:
     delete:
       description: Delete a specific lot
@@ -1929,6 +2326,34 @@ paths:
       summary: Update a lot
       tags:
       - Lot
+  /api/tombolas/tickets:
+    get:
+      description: Retrieve a list of all tickets
+      parameters:
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.AllTicketsResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get all tickets
+      tags:
+      - Ticket
   /api/users:
     get:
       description: Retrieve a list of all users
@@ -2138,6 +2563,62 @@ paths:
       summary: Get unread messages for a user
       tags:
       - Chat
+  /api/users/activity-stands:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of parents and students for activity
+      parameters:
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get list of users for activty
+      tags:
+      - Users
+  /api/users/for-points-attribution:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of parents and students for attributing points
+      parameters:
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.UsersListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get list of users for points attribution
+      tags:
+      - Users
   /api/users/me:
     get:
       description: Retrieve information about the currently authenticated user
@@ -2203,6 +2684,34 @@ paths:
       security:
       - Bearer: []
       summary: Update current user info
+      tags:
+      - Users
+  /api/users/parents/students:
+    get:
+      description: Retrieve a list of all users parents students
+      parameters:
+      - default: Bearer
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.UserResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get all users
       tags:
       - Users
   /api/webhook/stripe:

@@ -20,9 +20,12 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+var stripeKey string
+
 func init() {
 	initializers.LoadEnvVariables()
 	initializers.ConnectToDatabase()
+
 }
 
 // @title The Better Backend Template
@@ -55,6 +58,7 @@ func main() {
 	router.JetonsTransactionRoutes(server)
 	router.MessageRoutes(server)
 	router.SetupStripeWebhookRoute(server)
+	router.ParentRoutes(server)
 
 	// Configuration des proxys de confiance
 	trustedProxiesEnv := os.Getenv("TRUSTED_PROXIES")

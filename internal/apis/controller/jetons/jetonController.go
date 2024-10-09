@@ -1,7 +1,8 @@
 package jetons
 
 import (
-	"example/hello/internal/apis/controller/payment"
+	"github.com/stripe/stripe-go"
+    "github.com/stripe/stripe-go/paymentintent"
 	"example/hello/internal/apis/services"
 	"example/hello/internal/initializers"
 	"example/hello/internal/models"
@@ -11,9 +12,10 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
+	"os"
 	"github.com/gin-gonic/gin"
 )
+
 
 // CreateJetonTransaction godoc
 // @Summary Create a new jeton transaction
@@ -40,7 +42,7 @@ func CreateJetonTransaction(c *gin.Context) {
 	jetons_transaction := models.JetonTransaction{
 		Description: req.Description,
 		Type:        models.TransactionType(req.Type),
-		Montant:     req.Montant,
+		Montant:     int64(req.Montant),
 		Date:        req.Date,
 		UserID:      req.UserID,
 		StandID:     req.StandID,
@@ -128,7 +130,7 @@ func PayWithJetons(c *gin.Context) {
 	// Enregistrer la transaction
 	transaction := models.JetonTransaction{
 		UserID:      req.UserID,
-		Montant:     int(totalCost),
+		Montant:     int64(totalCost),
 		Type:        "ACHAT",
 		Description: fmt.Sprintf("Achat de %d %s au stand %s (ID: %d)", req.Quantity, stock.NomProduit, stand.Nom, stand.ID),
 		StandID:     &stand.ID,
@@ -142,33 +144,62 @@ func PayWithJetons(c *gin.Context) {
 
 	// Gérer le stock ou les points selon le type de stand
 	switch stand.Type {
-	case models.StandNourriture, models.StandBoisson:
-		if err := services.UpdateStandStock(tx, stand.ID, -int(req.Quantity)); err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to update stock: %v", err)})
-			return
-		}
-	case models.StandActivite:
-		// Pour les activités, on pourrait attribuer des points
-		totalPoints := stand.PointsAttribues * int(req.Quantity)
-		if err := services.AttributePointsToUser(req.UserID, totalPoints); err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to attribute points"})
-			return
-		}
-	}
+    case models.StandNourriture, models.StandBoisson:
+        if err := services.UpdateStandStock(tx, stand.ID, -int(req.Quantity)); err != nil {
+            tx.Rollback()
+            c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to update stock: %v", err)})
+            return
+        }
+    case models.StandActivite:
+        if err := services.UpdateStandStock(tx, stand.ID, -int(req.Quantity)); err != nil {
+            tx.Rollback()
+            c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to update stock: %v", err)})
+            return
+        }
 
-	// Commit de la transaction
-	if err := tx.Commit().Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to complete payment"})
-		return
-	}
+        totalPoints := 10 * int(req.Quantity)
 
-	c.JSON(http.StatusOK, gin.H{
-		"message":     "Payment successful",
-		"new_balance": user.SoldeJetons,
-		"total_cost":  totalCost,
-	})
+        // Chercher d'abord dans la table des parents
+        var parent models.Parent
+        if err := tx.Where("id = ?", req.UserID).First(&parent).Error; err == nil {
+            // C'est un parent
+            parent.PointsAccumules += totalPoints
+            if err := tx.Save(&parent).Error; err != nil {
+                tx.Rollback()
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update parent points"})
+                return
+            }
+        } else {
+            // Si ce n'est pas un parent, chercher dans la table des élèves
+            var eleve models.Eleve
+            if err := tx.Where("id = ?", req.UserID).First(&eleve).Error; err == nil {
+                // C'est un élève
+                eleve.PointsAccumules += totalPoints
+                if err := tx.Save(&eleve).Error; err != nil {
+                    tx.Rollback()
+                    c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update student points"})
+                    return
+                }
+            } else {
+                // Ni parent ni élève
+                tx.Rollback()
+                c.JSON(http.StatusBadRequest, gin.H{"error": "User is neither a parent nor a student"})
+                return
+            }
+        }
+    }
+
+    // Commit de la transaction
+    if err := tx.Commit().Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to complete payment"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message":     "Payment successful",
+        "new_balance": user.SoldeJetons,
+        "total_cost":  totalCost,
+    })
 }
 
 // BuyJetons godoc
@@ -189,31 +220,29 @@ func BuyJetons(c *gin.Context) {
 	var req struct {
 		UserID    uint   `json:"user_id" binding:"required"`
 		Amount    int64  `json:"amount" binding:"required,gt=0"`
-		CardToken string `json:"card_token" binding:"required"`
+		TokenAmount int   `json:"token_amount" binding:"required,gt=0"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Traiter le paiement avec Stripe
-	paymentID, err := payment.ProcessPayment(req.Amount, "eur", req.CardToken)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Payment failed: %v", err)})
-		return
-	}
+	 stripe.Key = os.Getenv("STRIPE_KEY")
 
-	// Si nous arrivons ici, le paiement a réussi ou nécessite une action côté client
-	if paymentID == "" {
-		// Le paiement nécessite une action côté client (comme 3D Secure)
-		c.JSON(http.StatusOK, gin.H{"requires_action": true, "client_secret": paymentID})
-		return
-	}
+	 // Créer une intention de paiement Stripe
+        params := &stripe.PaymentIntentParams{
+            Amount:   stripe.Int64(req.Amount),
+            Currency: stripe.String("eur"),
 
-	// Le paiement a réussi, nous pouvons maintenant ajouter les jetons
+        }
 
-	// Calculer le nombre de jetons (1 euro = 1 jeton, par exemple)
-	jetonsToAdd := int(req.Amount)
+        pi, err := paymentintent.New(params)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la création de l'intention de paiement"})
+            return
+        }
+
+	jetonsToAdd := int(req.TokenAmount)
 
 	tx := initializers.DB.Begin()
 
@@ -233,10 +262,10 @@ func BuyJetons(c *gin.Context) {
 
 	transaction := models.JetonTransaction{
 		UserID:      req.UserID,
-		Montant:     jetonsToAdd,
+		Montant:     req.Amount,
 		Type:        "ACHAT",
 		Description: fmt.Sprintf("Achat de %d jetons", jetonsToAdd),
-		PaiementID:  paymentID,
+		PaiementID:  pi.ClientSecret,
 	}
 
 	if err := tx.Create(&transaction).Error; err != nil {
@@ -253,7 +282,8 @@ func BuyJetons(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message":     "Jetons purchased successfully",
 		"new_balance": user.SoldeJetons,
-		"payment_id":  paymentID,
+		"payment_id":  pi.ClientSecret,
+		"client_secret": pi.ClientSecret,
 	})
 }
 
@@ -276,7 +306,6 @@ func AttributeJetonsToChild(c *gin.Context) {
 	var req struct {
 		ParentID uint  `json:"parent_id" binding:"required"`
 		ChildID  uint  `json:"child_id" binding:"required"`
-		Name     uint  `json:"name" binding:"required"`
 		Amount   int64 `json:"amount" binding:"required,gt=0"`
 	}
 
@@ -361,9 +390,9 @@ func AttributeJetonsToChild(c *gin.Context) {
 	// 9. Créer une transaction pour enregistrer le transfert de jetons
 	transaction := models.JetonTransaction{
 		UserID:      req.ParentID,
-		Montant:     int(-req.Amount),
+		Montant:     int64(-req.Amount),
 		Type:        "TRANSFERT",
-		Description: fmt.Sprintf("Transfert de %d jetons à l'enfant (Name: %d)", req.Amount, req.Name),
+		Description: fmt.Sprintf("Transfert de %d jetons à l'enfant", req.Amount),
 	}
 
 	if err := tx.Create(&transaction).Error; err != nil {
@@ -371,6 +400,7 @@ func AttributeJetonsToChild(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to record transaction"})
 		return
 	}
+
 
 	// 10. Commit de la transaction
 	if err := tx.Commit().Error; err != nil {

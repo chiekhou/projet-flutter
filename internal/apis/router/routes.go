@@ -12,6 +12,7 @@ import (
 	"example/hello/internal/apis/controller/stock"
 	"example/hello/internal/apis/controller/tombola"
 	"example/hello/internal/apis/controller/users"
+	"example/hello/internal/apis/controller/parents"
 	"example/hello/internal/apis/middleware"
 	"os"
 
@@ -43,10 +44,29 @@ func UserRoutes(r *gin.Engine) {
 		api.GET("/users/:id/messages", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ADMIN", "TENEUR_STAND", "ORGANISATEUR"), messages.GetUserMessages)
 		api.GET("/users/:id/messages/unread", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ADMIN", "TENEUR_STAND", "ORGANISATEUR"), messages.GetUnreadMessages)
 		api.GET("/conversations/:userId1/:userId2", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ADMIN", "TENEUR_STAND", "ORGANISATEUR"), messages.GetConversation)
+		api.GET("/users/for-points-attribution", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("TENEUR_STAND"), users.GetUsersForPointsAttribution)
+		api.GET("/users/activity-stands", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("TENEUR_STAND"), users.GetUsersForPointsAttribution)
+		api.GET("/users/parents/students", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ADMIN","ORGANISATEUR"), users.GetAllStudentsWithParentsAndUsers)
 		api.POST("/parents/me/children", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ADMIN", "PARENT"), auth.AddChildToParent)
 
 	}
 }
+
+func ParentRoutes(r *gin.Engine) {
+	secretKey := os.Getenv("SECRET_KEY")
+
+	api := r.Group("/api")
+	{
+
+        api.GET("/children/:id", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ADMIN","PARENT","ORGANISATEUR"), parents.GetChildren)
+        api.GET("/parents/user/me", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ADMIN","PARENT","ORGANISATEUR"), parents.GetParentId)
+		api.GET("/parents/:id/children", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ADMIN","PARENT","ORGANISATEUR"), parents.GetChildrenForParent)
+		api.GET("/children/:id/interactions", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ADMIN", "PARENT", "ORGANISATEUR"), parents.GetChildInteractions)
+		api.GET("/parents/:id/children/interactions", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ADMIN", "PARENT", "ORGANISATEUR"), parents.GetAllChildrenInteractionsForParent)
+
+	}
+}
+
 
 func KermesseRoutes(r *gin.Engine) {
 	secretKey := os.Getenv("SECRET_KEY")
@@ -72,12 +92,13 @@ func StandRoutes(r *gin.Engine) {
 
 	{
 		api.POST("/stands", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN"), stands.CreateStand)
-		api.GET("/stands/:id", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN"), stands.GetStand)
+		api.GET("/stands", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN"), stands.GetAllStands)
+		api.GET("/stands/:id", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN", "PARENT","ELEVE"), stands.GetStand)
 		api.PUT("/stands/:id", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN"), stands.UpdateStand)
 		api.DELETE("/stands/:id", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN"), stands.DeleteStand)
 		api.POST("/stands/:id/stock", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN"), stands.ManageStock)
 		api.POST("/stands/:id/jetons", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN"), stands.CollectJetons)
-		api.POST("/stands/:id/points", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN"), stands.AttributePoints)
+		api.POST("/stands/points", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN"), stands.AttributePoints)
 		api.GET("/stands/:id/jeton-transactions", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN"), jetons.GetStandTransactions)
 	}
 
@@ -90,6 +111,7 @@ func StockRoutes(r *gin.Engine) {
 
 	{
 		api.POST("/stands/:id/stocks", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN"), stock.CreateStock)
+		api.GET("/stocks", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("TENEUR_STAND", "ADMIN"), stock.GetAllStocks)
 		api.GET("/stands/:id/stocks", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN"), stock.GetStocksByStand)
 		api.PUT("/stocks/:id", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN"), stock.UpdateStock)
 		api.DELETE("/stocks/:id", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN"), stock.DeleteStock)
@@ -101,13 +123,16 @@ func StockRoutes(r *gin.Engine) {
 
 func TombolaRoutes(r *gin.Engine) {
 	secretKey := os.Getenv("SECRET_KEY")
-
 	api := r.Group("/api")
 
 	{
 		api.POST("/kermesses/:id/tombolas", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "ADMIN"), tombola.CreateTombola)
-		api.GET("/tombolas/:id", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "ADMIN"), tombola.GetTombola)
+		api.GET("/kermesses/:id/tombolas", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "ADMIN","ELEVE", "PARENT"), tombola.GetKermesseTombolas)
+		api.GET("/tombolas/:id", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "ADMIN","ELEVE", "PARENT"), tombola.GetTombola)
+		api.GET("/tombolas", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "ADMIN"), tombola.GetAllTombolas)
 		api.POST("/tombolas/:id/tickets", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("PARENT", "ELEVE", "ADMIN"), tombola.BuyTicket)
+		api.GET("/tombolas/tickets", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "ADMIN"), tombola.GetAllTickets)
+		api.GET("/tombolas/:id/user/:userId/tickets", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "ADMIN", "ELEVE", "PARENT"), tombola.GetUserTickets)
 		api.POST("/tombolas/:id/draw", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "TENEUR_STAND", "ADMIN"), tombola.PerformDraw)
 		api.GET("/tombolas/:id/gagnants", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "ADMIN", "TENEUR_STAND", "ELEVE", "PARENT"), gagnant.GetWinners)
 		api.GET("/tombolas/:id/gagnants/:id", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "ADMIN", "TENEUR_STAND", "ELEVE", "PARENT"), gagnant.GetWinner)
@@ -121,13 +146,11 @@ func TombolaRoutes(r *gin.Engine) {
 }
 func JetonsTransactionRoutes(r *gin.Engine) {
 	secretKey := os.Getenv("SECRET_KEY")
-
 	api := r.Group("/api")
 
 	{
-
 		api.POST("/jeton-transactions", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "ADMIN"), jetons.CreateJetonTransaction)
-		api.POST("/jeton-transaction/buy", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "ADMIN", "PARENT"), jetons.BuyJetons)
+		api.POST("/jeton-transaction/buy", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "ADMIN", "PARENT", "ELEVE"), jetons.BuyJetons)
 		api.POST("/jeton-transaction/transfer", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "ADMIN", "PARENT"), jetons.AttributeJetonsToChild)
 		api.GET("/jeton-transactions/summary", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "ADMIN", "PARENT"), jetons.GetTransactionSummary)
 		api.POST("/jeton-transactions/pay-with-jetons", middleware.JWTProtected(secretKey), middleware.RBACMiddleware("ORGANISATEUR", "ADMIN", "PARENT", "ELEVE"), jetons.PayWithJetons)

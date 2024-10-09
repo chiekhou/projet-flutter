@@ -96,6 +96,7 @@ func GetUser(c *gin.Context) {
 		Name:  user.Name,
 		Email: user.Email,
 		Roles: user.Roles.String(),
+		SoldeJetons : user.SoldeJetons,
 	})
 }
 
@@ -171,4 +172,139 @@ func DeleteUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.SuccessResponse{Data: true})
+}
+
+// GetUsersForPointsAttribution godoc
+// @Summary Get list of users for points attribution
+// @Description Get a list of parents and students for attributing points
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Success 200 {object} response.UsersListResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security Bearer
+// @Param Authorization header string true "Insert your access token" default(Bearer )
+// @Router /api/users/for-points-attribution [get]
+func GetUsersForPointsAttribution(c *gin.Context) {
+    var parents []struct {
+        ID     uint
+        UserID uint
+        PointsAccumules int
+        Name   string
+    }
+
+    var students []struct {
+        ID     uint
+        UserID uint
+        PointsAccumules int
+        Name   string
+    }
+
+    if err := initializers.DB.Table("parents").
+        Select("parents.id, parents.user_id, parents.points_accumules, users.name").
+        Joins("JOIN users ON users.id = parents.user_id").
+        Scan(&parents).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, response.ErrorResponse{Error: "Failed to fetch parents"})
+        return
+    }
+
+    if err := initializers.DB.Table("eleves").
+        Select("eleves.id, eleves.user_id, eleves.points_accumules, users.name").
+        Joins("JOIN users ON users.id = eleves.user_id").
+        Scan(&students).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, response.ErrorResponse{Error: "Failed to fetch students"})
+        return
+    }
+
+    usersList := response.UsersListResponse{
+        Parents:  make([]response.UserInfo, len(parents)),
+        Students: make([]response.UserInfo, len(students)),
+    }
+
+    for i, parent := range parents {
+        usersList.Parents[i] = response.UserInfo{
+            ID:     parent.ID,
+            UserID: parent.UserID,
+            Name:   parent.Name,
+            PointsAccumules: parent.PointsAccumules,
+            Type:   "parent",
+        }
+    }
+
+    for i, student := range students {
+        usersList.Students[i] = response.UserInfo{
+            ID:     student.ID,
+            UserID: student.UserID,
+            Name:   student.Name,
+            PointsAccumules: student.PointsAccumules,
+            Type:   "student",
+        }
+    }
+
+    c.JSON(http.StatusOK, usersList)
+}
+
+// GetActivityForUsers godoc
+// @Summary Get list of users for activty
+// @Description Get a list of parents and students for activity
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Success 200 {object} response.SuccessResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security Bearer
+// @Param Authorization header string true "Insert your access token" default(Bearer )
+// @Router /api/users/activity-stands [get]
+func GetActivityStandsForUser(c *gin.Context) {
+    userID, err := strconv.Atoi(c.Param("id"))
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+        return
+    }
+
+    userType := c.Query("userType")
+    if userType != "parent" && userType != "student" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user type"})
+        return
+    }
+
+    var stands []models.Stand
+    query := initializers.DB.Where("type = ?", models.StandActivite)
+
+    if userType == "parent" {
+        query = query.Joins("JOIN jeton_transactions ON jeton_transactions.stand_id = stands.id").
+                      Joins("JOIN parents ON parents.user_id = jeton_transactions.user_id").
+                      Where("parents.id = ?", userID)
+    } else {
+        query = query.Joins("JOIN jeton_transactions ON jeton_transactions.stand_id = stands.id").
+                      Joins("JOIN eleves ON eleves.user_id = jeton_transactions.user_id").
+                      Where("eleves.id = ?", userID)
+    }
+
+    if err := query.Distinct().Find(&stands).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve activity stands"})
+        return
+    }
+
+    c.JSON(http.StatusOK, stands)
+}
+
+// GetUsers godoc
+// @Summary Get all users
+// @Description Retrieve a list of all users parents students
+// @Tags Users
+// @Produce json
+// @Success 200 {array} response.UserResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security Bearer
+// @Param Authorization header string true "Insert your access token" default(Bearer )
+// @Router /api/users/parents/students [get]
+func GetAllStudentsWithParentsAndUsers(c *gin.Context) {
+    var students []models.Eleve
+    if err := initializers.DB.Preload("Parent").Preload("Parent.User").Preload("User").Find(&students).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Échec de la récupération des élèves, parents et utilisateurs"})
+        return
+    }
+
+    c.JSON(http.StatusOK, students)
 }

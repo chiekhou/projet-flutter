@@ -47,6 +47,26 @@ func CreateStock(c *gin.Context) {
 	c.JSON(http.StatusCreated, stock)
 }
 
+// GetStocks godoc
+// @Summary Get all stocks
+// @Description Retrieve a list of all stocks
+// @Tags Stock
+// @Produce json
+// @Success 200 {array} response.SuccessResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security Bearer
+// @Param Authorization header string true "Insert your access token" default(Bearer )
+// @Router /api/stocks [get]
+func GetAllStocks(c *gin.Context) {
+    var stocks []models.Stock
+    if err := initializers.DB.Preload("Stand").Find(&stocks).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Échec de la récupération des stocks"})
+        return
+    }
+
+    c.JSON(http.StatusOK, stocks)
+}
+
 // GetStocksByStand godoc
 // @Summary Get all stock entries for a stand
 // @Description Retrieve all stock entries for a specific stand

@@ -20,5 +20,5 @@ type User struct {
 	Email       string `json:"email" gorm:"uniqueIndex"`
 	Password    string `json:"password"`
 	Roles       Role   `json:"role"`
-	SoldeJetons int64  `json:"solde_jeton"`
+	SoldeJetons int64  `json:"solde_jetons"`
 }

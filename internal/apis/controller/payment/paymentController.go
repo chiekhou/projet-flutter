@@ -10,49 +10,37 @@ import (
 
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/paymentintent"
-	"github.com/stripe/stripe-go/paymentmethod"
 	"github.com/stripe/stripe-go/v72/webhook"
 )
 
-func ProcessPayment(amount int64, currency string, cardToken string) (string, error) {
+func ProcessPayment(amount int64, currency string) (string, error) {
 	// Configurez votre clé secrète Stripe
 
 	stripe.Key = os.Getenv("STRIPE_KEY")
 
-	pm, err := paymentmethod.New(&stripe.PaymentMethodParams{
-		Type: stripe.String(string(stripe.PaymentMethodTypeCard)),
-		Card: &stripe.PaymentMethodCardParams{
-			Token: stripe.String(cardToken),
-		},
-	})
+    // Créer un PaymentIntent en utilisant le PaymentMethod
+    params := &stripe.PaymentIntentParams{
+        Amount:             stripe.Int64(amount),
+        Currency:           stripe.String(currency),
+        //PaymentMethod:      stripe.String(paymentMethodId),
+        Confirm:            stripe.Bool(true),
+        PaymentMethodTypes: []*string{stripe.String("card")},
+    }
 
-	if err != nil {
-		return "", fmt.Errorf("erreur lors de la création du PaymentMethod: %v", err)
-	}
+    pi, err := paymentintent.New(params)
+    if err != nil {
+        return "", fmt.Errorf("erreur lors de la création du PaymentIntent: %v", err)
+    }
 
-	// Créer un PaymentIntent en utilisant le PaymentMethod
-	params := &stripe.PaymentIntentParams{
-		Amount:             stripe.Int64(amount),
-		Currency:           stripe.String(currency),
-		PaymentMethod:      stripe.String(pm.ID),
-		Confirm:            stripe.Bool(true),
-		PaymentMethodTypes: []*string{stripe.String("card")},
-	}
+    if pi.Status == stripe.PaymentIntentStatusRequiresAction {
+        return pi.ClientSecret, nil
+    }
 
-	pi, err := paymentintent.New(params)
-	if err != nil {
-		return "", fmt.Errorf("erreur lors de la création du PaymentIntent: %v", err)
-	}
+    if pi.Status == stripe.PaymentIntentStatusSucceeded {
+        return pi.ID, nil
+    }
 
-	if pi.Status == stripe.PaymentIntentStatusRequiresAction {
-		return pi.ClientSecret, nil
-	}
-
-	if pi.Status == stripe.PaymentIntentStatusSucceeded {
-		return pi.ID, nil
-	}
-
-	return "", fmt.Errorf("statut de paiement inattendu: %s", pi.Status)
+    return "", fmt.Errorf("statut de paiement inattendu: %s", pi.Status)
 }
 
 func HandleStripeWebhook(w http.ResponseWriter, req *http.Request) {

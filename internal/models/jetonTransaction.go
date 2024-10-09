@@ -16,10 +16,10 @@ type JetonTransaction struct {
 	ID          uint `gorm:"primary_key" json:"id"`
 	UserID      uint
 	User        User
-	Montant     int
+	Montant     int64
 	Type        TransactionType
 	Description string
-	StandID     *uint // Optionnel, pour les transactions liées à un stand
+	StandID     *uint
 	Stand       *Stand
 	Date        time.Time
 	PaiementID  string

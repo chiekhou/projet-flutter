@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-
+    "gorm.io/gorm"
 	"example/hello/internal/initializers"
 	"example/hello/internal/models"
 	"example/hello/requests"
 	"example/hello/response"
-
 	"github.com/gin-gonic/gin"
+	"errors"
 )
 
 func stringToTypeStand(typeStandStr string) (models.StandType, error) {
@@ -101,6 +101,26 @@ func GetStand(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, stand)
+}
+
+// GetStands godoc
+// @Summary Get all stands
+// @Description Retrieve a list of all stands
+// @Tags Stand
+// @Produce json
+// @Success 200 {array} response.SuccessResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security Bearer
+// @Param Authorization header string true "Insert your access token" default(Bearer )
+// @Router /api/stands [get]
+func GetAllStands(c *gin.Context) {
+    var stands []models.Stand
+    if err := initializers.DB.Preload("Stocks").Find(&stands).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Échec de la récupération des stands"})
+        return
+    }
+
+    c.JSON(http.StatusOK,stands)
 }
 
 // UpdateStand godoc
@@ -237,45 +257,79 @@ func CollectJetons(c *gin.Context) {
 }
 
 // AttributePoints godoc
-// @Summary Attribute points for a stand
-// @Description Attribute points for a specific stand (only for activity stands)
+// @Summary Attribute points for a stand and a user
+// @Description Attribute points for a specific stand (only for activity stands) to a parent or student
 // @Tags Stand
 // @Accept json
 // @Produce json
-// @Param id path int true "Stand ID"
-// @Param points body models.Stand true "Points attribution object"
-// @Success 200 {object} models.Stand
+// @Param points body models.Stand  true "Points attribution object"
+// @Success 200 {object} response.PointsAttributionResponse
 // @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
 // @Security Bearer
 // @Param Authorization header string true "Insert your access token" default(Bearer )
-// @Router /api/stands/{id}/points [post]
+// @Router /api/stands/points [post]
 func AttributePoints(c *gin.Context) {
-	standID := c.Param("id")
-	var pointsData struct {
-		Points int `json:"points"`
-	}
-	if err := c.ShouldBindJSON(&pointsData); err != nil {
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{Error: "Invalid request format"})
-		return
-	}
+    var req struct {
+        Points   int    `json:"points" binding:"required"`
+        UserID   uint   `json:"userId" binding:"required"`
+        UserType string `json:"userType" binding:"required,oneof=parent student"`
+    }
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+        return
+    }
 
-	var stand models.Stand
-	if err := initializers.DB.First(&stand, standID).Error; err != nil {
-		c.JSON(http.StatusNotFound, response.ErrorResponse{Error: "Stand not found"})
-		return
-	}
+    tx := initializers.DB.Begin()
+    defer func() {
+        if r := recover(); r != nil {
+            tx.Rollback()
+        }
+    }()
 
-	if stand.Type != models.StandActivite {
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{Error: "Points can only be attributed to activity stands"})
-		return
-	}
+    // Mettre à jour les points de l'utilisateur
+    var updatedPoints int
+    var userName string
+    if err := updateUserPoints(tx, req.UserType, req.UserID, req.Points, &updatedPoints, &userName); err != nil {
+        tx.Rollback()
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
 
-	stand.PointsAttribues += pointsData.Points
-	initializers.DB.Save(&stand)
+    if err := tx.Commit().Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to commit transaction"})
+        return
+    }
 
-	c.JSON(http.StatusOK, response.JetonCollectesResponse{
-		Message:     "Points Attribues successfully",
-		TotalJetons: int64(stand.PointsAttribues),
-	})
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Points attributed successfully",
+        "userId": req.UserID,
+        "userName": userName,
+        "userType": req.UserType,
+        "pointsAdded": req.Points,
+        "totalPoints": updatedPoints,
+    })
+}
+
+func updateUserPoints(tx *gorm.DB, userType string, userID uint, points int, updatedPoints *int, userName *string) error {
+    if userType == "parent" {
+        var parent models.Parent
+        if err := tx.First(&parent, userID).Error; err != nil {
+            return errors.New("Parent not found")
+        }
+        parent.PointsAccumules += points
+        *updatedPoints = parent.PointsAccumules
+       // *userName = parent.Name
+        return tx.Save(&parent).Error
+    } else {
+        var student models.Eleve
+        if err := tx.First(&student, userID).Error; err != nil {
+            return errors.New("Student not found")
+        }
+        student.PointsAccumules += points
+        *updatedPoints = student.PointsAccumules
+       // *userName = student.Name
+        return tx.Save(&student).Error
+    }
 }

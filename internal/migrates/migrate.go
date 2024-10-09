@@ -3,6 +3,7 @@ package main
 import (
 	initializers "example/hello/internal/initializers"
 	"example/hello/internal/models"
+	"example/hello/internal/seed"
 )
 
 func init() {
@@ -46,8 +47,8 @@ func main() {
 		&models.Ticket{},
 		&models.Gagnant{},
 		&models.JetonTransaction{},
-		&models.Message{},
-	)
+		&models.Message{},)
+
 	if err != nil {
 		return
 	}

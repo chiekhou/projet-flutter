@@ -8,7 +8,9 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-
+    "time"
+    "fmt"
+    //"gorm.io/gorm"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -94,25 +96,57 @@ func HandleWebSocket(c *gin.Context) {
 // @Param Authorization header string true "Insert your access token" default(Bearer )
 // @Router /api/messages [post]
 func SendMessage(c *gin.Context) {
-	var message models.Message
-	if err := c.ShouldBindJSON(&message); err != nil {
-		c.JSON(http.StatusBadRequest, response.ErrorResponse{Error: "Format de requête invalide"})
-		return
-	}
+    var messageInput struct {
+        ExpediteurID   uint   `json:"expediteur_id" binding:"required"`
+        DestinataireID uint   `json:"destinataire_id" binding:"required"`
+        Contenu        string `json:"contenu" binding:"required"`
+    }
 
-	message.Lu = false
+    if err := c.ShouldBindJSON(&messageInput); err != nil {
+        c.JSON(http.StatusBadRequest, response.ErrorResponse{Error: fmt.Sprintf("Format de requête invalide: %v", err)})
+        return
+    }
 
-	if err := initializers.DB.Create(&message).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Error: "Échec de l'envoi du message"})
-		return
-	}
+    // Log des données reçues
+    log.Printf("Données de message reçues: %+v", messageInput)
 
-	// Envoyer le message en temps réel si le destinataire est connecté
-	if recipient, ok := clients[message.DestinataireID]; ok {
-		recipient.WriteJSON(message)
-	}
+    // Vérification des IDs
+    if messageInput.ExpediteurID == 0 || messageInput.DestinataireID == 0 {
+        c.JSON(http.StatusBadRequest, response.ErrorResponse{Error: "Les IDs de l'expéditeur et du destinataire sont requis et ne peuvent pas être zéro"})
+        return
+    }
 
-	c.JSON(http.StatusCreated, message)
+    // Création du message
+    message := models.Message{
+        ExpediteurID:   messageInput.ExpediteurID,
+        DestinataireID: messageInput.DestinataireID,
+        Contenu:        messageInput.Contenu,
+        Date:           time.Now(),
+        Lu:             false,
+    }
+
+    // Récupération des informations de l'expéditeur
+    if err := initializers.DB.First(&message.Expediteur, message.ExpediteurID).Error; err != nil {
+        c.JSON(http.StatusNotFound, response.ErrorResponse{Error: fmt.Sprintf("Expéditeur non trouvé: %v", err)})
+        return
+    }
+
+    // Récupération des informations du destinataire
+    if err := initializers.DB.First(&message.Destinataire, message.DestinataireID).Error; err != nil {
+        c.JSON(http.StatusNotFound, response.ErrorResponse{Error: fmt.Sprintf("Destinataire non trouvé: %v", err)})
+        return
+    }
+
+    // Log avant l'insertion
+    log.Printf("Message à insérer: %+v", message)
+
+    // Insertion du message
+    if err := initializers.DB.Create(&message).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, response.ErrorResponse{Error: fmt.Sprintf("Échec de l'envoi du message: %v", err)})
+        return
+    }
+
+    c.JSON(http.StatusCreated, message)
 }
 
 // GetUserMessages godoc
