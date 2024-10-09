@@ -1,0 +1,51 @@
+{
+  "1": {
+    "stands": [
+      {
+        "id": 3,
+        "nom": "La Grayance",
+        "type": "NOURRITURE",
+        "position": {
+          "x": 100,
+          "y": 100
+        }
+      },
+      {
+        "id": 4,
+        "nom": "Tir dans le trou",
+        "type": "ACTIVITES",
+        "position": {
+          "x": 100,
+          "y": 100
+        }
+      },
+      {
+        "id": 2,
+        "nom": "La Buvance",
+        "type": "BOISSON",
+        "position": {
+          "x": 100,
+          "y": 100
+        }
+      }
+    ],
+    "dimensions": {
+      "hauteur": 1000,
+      "largeur": 1000
+    }
+  },
+  "2": {
+    "stands": [],
+    "dimensions": {
+      "hauteur": 1000,
+      "largeur": 1000
+    }
+  },
+  "3": {
+    "stands": [],
+    "dimensions": {
+      "hauteur": 1000,
+      "largeur": 1000
+    }
+  }
+}

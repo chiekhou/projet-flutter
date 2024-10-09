@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="out">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/flutter_app/build/app/intermediates/project_dex_archive/debug/out/93f3efce791c99d08de65dddc58a97095e2e91fd6c73576834ffaea19907c6be_3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/flutter_app/build/app/intermediates/project_dex_archive/debug/out/93f3efce791c99d08de65dddc58a97095e2e91fd6c73576834ffaea19907c6be_2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/flutter_app/build/app/intermediates/project_dex_archive/debug/out/93f3efce791c99d08de65dddc58a97095e2e91fd6c73576834ffaea19907c6be_0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/flutter_app/build/app/intermediates/project_dex_archive/debug/out/93f3efce791c99d08de65dddc58a97095e2e91fd6c73576834ffaea19907c6be_1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
