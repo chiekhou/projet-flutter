@@ -51,7 +51,7 @@ KerFest est une application full-stack qui connecte tous les acteurs d'une kerme
 ## Architecture
 
 ```
-projet-flutter-main/
+projet-flutter/
 ├── flutter_app/          # Application mobile Flutter (iOS & Android)
 │   └── lib/
 │       ├── models/       # Modèles de données
