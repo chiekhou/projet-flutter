@@ -3,7 +3,7 @@
 Application mobile de gestion de kermesse scolaire, développée dans le cadre d'un projet d'école.
 Elle permet d'organiser et de vivre une kermesse de A à Z : gestion des stands, tombola, jetons, classement des élèves et communication en temps réel.
 
-> 🎥 **[Voir la démo](https://drive.google.com/file/d/1zQr-wsSTK5zvm1jUtuYiy3kMMjJuiL6u/view?usp=sharing)** ← *(remplace ce lien par ton lien de démo)*
+> 🎥 **[Voir la démo](https://drive.google.com/file/d/1zQr-wsSTK5zvm1jUtuYiy3kMMjJuiL6u/view?usp=sharing)** 
 
 ---
 
